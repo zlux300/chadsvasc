@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Afib Risk</title>
+
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+
+    <script src="jquery.js"></script>
+    <script src="lodash.js"></script>
+    <script src="fhir-client.js"></script>
+    <script src="moment.js"></script>
+    <script src="fhirAtlas.js"></script>
+    <script src="popper.js"></script>    
+    <script src="bootstrap.js"></script>    
+    <!-- materialize.css-->
+    <link href="bootstrap.css" rel="stylesheet">
+    <link href="main.css" rel="stylesheet">
+
+           
+    <style>
+
+    </style> 
+
+  </head>
+  <body>
+
+
+
+    <table class="fullWidth explanation">
+        <tr>
+          <td class="left">
+            <span style="font-size: 1.4em;">CHA₂DS₂-VASc Score for Atrial Fibrillation Stroke Risk</span>
+            <br>
+            <span class="small">Autofilling medical calculator with information from the EHR </span>
+
+          </td>
+          <td class="left">
+            <span id="creditsToggle" type="button" data-toggle="modal" data-target="#creditsModal">Credits</span>
+            <br>
+            <span id="progress">Loading</span>
+          </td>
+        </tr>
+      </table>
+<table id="parent">
+  <tr>
+    <td class='parentTd'>
+          <div id="gTableParent">
+            <table class='gTable fullWidth'>
+              <thead>
+                <tr><th class='thLabel'>Criteria</th><th class='infoFromEHR'>EHR Information</th></tr>
+              </thead>
+              <tbody>
+
+              <tr>
+                <td>Age</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gAgeAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gAge" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText"><65</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gAge" value=0></label>
+                    <label for="gAge"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">65-74</span><span class="btnIncrement">+1</span></span><input type="radio" name="gAge" value=1></label>
+                    <label for="gAge"  data-state="2" class="btn btn-outline-secondary"><span><span class="btnText">>=75</span><span class="btnIncrement">+2</span></span><input type="radio" name="gAge" value=2></label>              
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Gender</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gGenderAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gGender"  data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">Male</span><span class="btnIncrement">0</span></span><input type="radio" name="gGender" value=0></label>  
+                    <label for="gGender" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Female</span><span class="btnIncrement">1</span></span><input class="btn btn-outline-secondary" type="radio" name="gGender" value=1></label>                    
+                                                
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>History of CHF</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gCHFAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gCHF" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gCHF" value=0></label>
+                    <label for="gCHF"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="gCHF" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>History of HTN</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gHTNAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gHTN" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gHTN" value=0></label>
+                    <label for="gHTN"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="gHTN" value=1></label>              
+                  </div>
+                </td>
+              </tr>        
+
+              <tr>
+                <td>History of Stroke, TIA, or Thromboembolic Disease</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gCVATIAPEDVTAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gCVATIAPEDVT" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gCVATIAPEDVT" value=0></label>
+                    <label for="gCVATIAPEDVT"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+2</span></span><input type="radio" name="gCVATIAPEDVT" value=2></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>History of Vascular Disease (PAD, ACS)</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gVASCDZAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gVASCDZ" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gVASCDZ" value=0></label>
+                    <label for="gVASCDZ"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="gVASCDZ" value=1></label>              
+                  </div>
+                </td>
+              </tr> 
+
+              <tr>
+                <td>History of Diabetes</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gDMAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gDM" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gDM" value=0></label>
+                    <label for="gDM"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="gDM" value=1></label>              
+                  </div>
+                </td>
+              </tr>               
+              <tr>
+                <td></td>
+                <td></td>
+                <td id="calculatedScore"></td>
+              </tr>
+                       
+              </tbody>
+            </table>  
+          </div>    
+    </td> 
+</table>
+
+
+
+    <div id="creditsModal" class="modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Credits & Disclaimer<img id="logo" src="mi2.png" alt=""></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <tr>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/19762550" target="_blank">CHA₂DS₂-VASc</td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term=Lip+GY%5BAuthor%5D" target="_blank">Dr. Gregory Lip</a></td>
+              </tr>
+              <tr>
+                <td>Other projects used</td>
+                <td>
+                  <a href="https://github.com/smart-on-fhir/client-js">fhir-client.js</a>
+                  <a href="https://getbootstrap.com/">bootstrap</a>
+                  <a href="https://jquery.com/">jquery</a>
+                  <a href="https://underscorejs.org">underscore.js</a>
+                  <a href="https://momentjs.com/">moment.js</a>
+                  <a href="https://popper.js.org/">popper.js</a>                                                      
+                </td>
+              </tr>
+              <tr>
+                <td>A project of</td>
+                <td><a href="http://mi2.medstarhealth.org/">The MedStar Institute for Innovation</a></td>                
+              </tr>
+              <tr>
+                <td>Contribute at</td>
+                <td><a href="https://github.com/MI2-Labs" target="_blank">MI2's Github</a></td>
+              </tr>
+              <tr>
+                <td>License</td>
+                <td><a href="https://github.com/MI2-Labs/chadsvasc/License" target="_blank">MIT</a></td>
+              </tr>
+              <tr>
+                <td colspan=2>
+                 A best effort is made to search through the EHR to find matches for different elements of this score.  However, a negative search does not necessarily imply absence of that element.  Please always check with patient, their family, and the medical record. 
+                </td>
+              </tr>
+              <tr>
+                <td colspan=2>
+                  This app is intended for educational purposes only.  It cannot diagnose medical conditions or provide treatment recommendations.  This information should not be used for the diagnosis or treatment of any health problem or disease.  This information is not intended to replace clinical judgment or guide individual patient care in any manner.  The system's authors, developers and distributors assume no responsibility for any erroneous results due to defects in the system. Access to and use of the system is provided without warranty of merchantability or fitness for any particular purpose or any other warranty, express or implied.                  
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+<script>
+
+
+var myApp = {}
+
+myApp.data = {}
+myApp.data.smartPatient = {}
+myApp.data.conditions = {}
+myApp.data.observations = {}
+
+myApp.deferred = {}
+myApp.deferred.smartPatient = $.Deferred()
+myApp.deferred.conditions = $.Deferred()
+myApp.deferred.observations = $.Deferred()
+
+$.when(myApp.deferred.smartPatient).then(function(){ getAllFHIR(); getObservation() })
+$.when(myApp.deferred.conditions, myApp.deferred.observations).then(function(){ render(); $("#progress").html("") })
+
+
+
+
+
+
+$(document).ready(function(){
+
+  getFHIR()
+
+})
+
+function getFHIR(){
+    FHIR.oauth2.ready(function (fhirClient) {
+        myApp.smart = fhirClient;
+        myApp.patient = fhirClient.patient;
+        $.when( myApp.patient.read() )
+                .done(function (data) {
+                  myApp.data.smartPatient = data
+                  myApp.deferred.smartPatient.resolve()
+        }, function(error){ 
+//          alert(JSON.stringify(error))
+        })
+      })
+}
+
+function getAllFHIR(){
+
+       $.when(myApp.patient.api.fetchAll({
+            type: "Condition"
+        })
+        .done(function (data) {
+                  myApp.data.conditions = data
+                  myApp.deferred.conditions.resolve()   
+
+        }), function(error){ alert(JSON.stringify(error)) });
+
+}
+
+function getObservation(){
+
+       $.when(myApp.patient.api.fetchAll({
+            type: "Observation",
+            query: {
+                status: "final",
+                date: {$gte: moment().subtract(72,"hours").format("YYYY-MM-DDTHH:mm:ssZ")}
+              } 
+        })
+        .done(function (data) {
+                  myApp.data.observations = data
+                  myApp.deferred.observations.resolve()   
+
+        }), function(error){ alert(JSON.stringify(error)) });
+
+}
+
+function render(){
+
+///////////////////////////
+var relevants = [
+
+  {resource: "conditions", name: "chf", displayForNegativeQuery: "No history of CHF found." },
+  {resource: "conditions", name: "dm", displayForNegativeQuery: "No history of DM found." },
+  {resource: "conditions", name: "htn", displayForNegativeQuery: "No history of HTN found." },
+  {resource: "conditions", name: "vascdz", displayForNegativeQuery: "No history of CVA found." },
+  {resource: "conditions", name: "cvatiapedvt", displayForNegativeQuery: "No history of CVA found." }  
+  
+
+]
+
+
+var resources = _.groupBy(relevants, function(val,index){ return val.resource })
+
+  _.each(resources, function(val,index){
+
+    var promiseArray = []
+
+    _.each(val, function(v,i){
+        promiseArray.push( renderUI(v) )
+    })
+
+    $.when.apply($, promiseArray).then(function(){ 
+      renderCard.apply(this, arguments); 
+    })
+
+  })
+
+
+function renderUI(incoming){
+    var dfd = $.Deferred();
+
+    if (incoming.resource === "observations"){
+
+        var q = fhirAtlasObservation(incoming.name, myApp.data.observations, incoming.typeOfLoinc, incoming.stringOrObj, incoming.firstLastAll, incoming.timeFrameInHours)
+
+        dfd.resolve({q:q, incoming:incoming});
+    }
+
+    if (incoming.resource === "conditions"){
+
+        var q = fhirAtlasCondition(incoming.name, myApp.data.conditions)
+
+
+        dfd.resolve({q:q, incoming:incoming});
+    }
+
+
+    return dfd.promise()
+}
+///////////////////////////
+
+}
+
+function renderCard(){
+
+
+  if (!arguments[0]){ return false; }
+  var card = arguments[0].incoming.card
+
+  var mainArguments = Array.prototype.slice.call(arguments);
+
+
+  var toInsert = ""
+
+  _.each(mainArguments, function(val,index){
+    console.log(val)
+    if (val.q.length === 0 ){
+      console.log('g'+_.upperCase(val.incoming.name))    
+        $('label[for=g'+_.upperCase(val.incoming.name)+'][data-state=0]').trigger('click');
+        $('label[for=g'+_.upperCase(val.incoming.name)+']').addClass('btn-primary'); 
+        $('div[data-component=g'+_.upperCase(val.incoming.name)+'Assist]').html( "Not found" )
+
+    }else{
+      
+        $('label[for=g'+_.upperCase(val.incoming.name)+'][data-state=1]').trigger('click');
+        $('label[for=g'+_.upperCase(val.incoming.name)+']').addClass('btn-primary');            
+        $('div[data-component=g'+_.upperCase(val.incoming.name)+'Assist]').html( val.q.join(", ") )
+
+
+    }
+
+  })        
+            
+
+
+
+//age
+        var age = moment().diff( moment(myApp.data.smartPatient.birthDate, "YYYY-MM-DD"), "year")
+
+          if (age < 65){
+            $('label[for=gAge][data-state=0]').trigger('click');
+            $('label[for=gAge]').addClass('btn-primary');            
+            $('div[data-component=gAgeAssist]').html("Age: "+age)
+          }else if (age >= 65 && age < 75){
+            $('label[for=gAge][data-state=1]').trigger('click');          
+            $('label[for=gAge]').addClass('btn-primary');            
+            $('div[data-component=gAgeAssist]').html("Age: "+age)
+          }else if (age >= 75 ){
+            $('label[for=gAge][data-state=2]').trigger('click');          
+            $('label[for=gAge]').addClass('btn-primary');            
+            $('div[data-component=gAgeAssist]').html("Age: "+age)
+          }else{
+            alert("bad age")
+          }
+
+
+          if (myApp.data.smartPatient.gender === "male"){
+            $('label[for=gGender][data-state=0]').trigger('click');
+            $('label[for=gGender]').addClass('btn-primary');            
+            $('div[data-component=gGenderAssist]').html(_.capitalize(myApp.data.smartPatient.gender))
+          }else if (myApp.data.smartPatient.gender === "female"){
+            $('label[for=gGender][data-state=1]').trigger('click');          
+            $('label[for=gGender]').addClass('btn-primary');            
+            $('div[data-component=gGenderAssist]').html(_.capitalize(myApp.data.smartPatient.gender))
+          }else{
+            alert("bad age")
+          }
+
+
+}
+
+      $("body").on("change", ".gTable input", function(){ calculatedScore() })
+
+      function calculatedScore(){
+        var score = 0
+        var $inputs = $(".gTable input:checked")
+        //only checked
+        _.each($inputs, function(val,index){
+          score = score + parseInt( $(val).val() )
+        })
+
+        var $allInputs = $(".gTable input")
+        var allInputsLength = $allInputs.length
+        var checkedInputsLength = $inputs.length
+
+        var addPhrase = ""
+        if ((((allInputsLength-1)/2)-checkedInputsLength) !== 0){
+          addPhrase = "<span class='incomplete'>("+(((allInputsLength-1)/2)-checkedInputsLength)+" incomplete)</span>"
+        }
+        var recs = ""
+        /*
+        if (score === 0) { recs = "<br/><span>Say Something1</span>" }
+        else if (score > 0){ recs = "<br/><span>Say Something2</span>" }
+        else if (score > 1){ recs = "<br/><span>Say Something3</span>" }
+          */
+        $("#calculatedScore").html("<span>Score: "+score+"</span>"+addPhrase+recs)
+      }      
+
+     </script>
+
+
+
+  </body>
+</html>

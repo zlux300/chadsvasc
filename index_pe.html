@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SMART PE RULE OUT</title>
+
+    <meta content="IE=edge" http-equiv="X-UA-Compatible" />
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
+
+    <link href="lib/bootstrap.css" rel="stylesheet">
+    <link href="main.css" rel="stylesheet">
+    <script src="lib/main.min.js"></script>
+    <!--
+    <script src="lib/jquery.js"></script>
+    <script src="lib/popper.js"></script>
+    <script src="lib/bootstrap.js"></script>
+    <script src="lib/underscore.js"></script>
+    <script src="lib/fhir-client.js"></script>
+    <script src="lib/moment.js"></script>
+    -->
+    <script>
+    //fix localStorage as file:/// messes up IE11 in cerner
+      !localStorage && (l = location, p = l.pathname.replace(/(^..)(:)/, "$1$$"), (l.href = l.protocol + "//127.0.0.1" + p));
+      $.support.cors = true;
+    </script>
+
+
+
+  </head>
+  <body>
+      <table class="fullWidth explanation">
+        <tr>
+          <td class="left">
+            <span style="font-size: 1.4em;">Revised Geneva + PERC Rule</span>
+            <br>
+            <span class="small">Autofilling medical calculator with information from the EHR </span>
+            <br>
+            <span id="creditsToggle" type="button" data-toggle="modal" data-target="#creditsModal">Credits</span>
+            <br>
+            <span id="progress">Loading</span>
+          </td>
+          <td class="left">
+            <p>Instructions</p>
+            <ul>
+              <li>First complete calculator for the Revised Geneva.</li>
+              <li>If low risk by Geneva, complete the PERC rule.</li>              
+              <li>If not low risk by Geneva, PERC rule will not display.</li>                            
+            </ul>
+          </td>
+        </tr>
+      </table>
+<table id="parent">
+  <tr>
+    <td class='parentTd'>
+          <div id="gTableParent">
+            <table class='gTable fullWidth'>
+              <thead>
+                <tr><th colspan=2>Revised Geneva</th><td rowspan=2 id="gCalculatedScore">&nbsp;</td></tr>
+                <tr><th class='thLabel'>Criteria</th><th class='infoFromEHR'>EHR Information</th></tr>
+              </thead>
+              <tbody>
+              <tr>
+                <td>Unilateral lower limb pain</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gLimbAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gLimb" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gLimb" value=0></label>
+                    <label for="gLimb"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+3</span></span><input type="radio" name="gLimb" value=3></label>              
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Hemoptysis</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gHemoptysisAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gHemoptysis" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gHemoptysis" value=0></label>
+                    <label for="gHemoptysis"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+2</span></span><input type="radio" name="gHemoptysis" value=2></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Pain on limb palpation</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gLimbPainAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gLimbPain" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gLimbPain" value=0></label>
+                    <label for="gLimbPain"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+4</span></span><input type="radio" name="gLimbPain" value=4></label>              
+                  </div>
+                </td>
+              </tr> 
+
+              <tr>
+                <td>Age > 65</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gAgeAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gAge" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gAge" value=0></label>
+                    <label for="gAge"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="gAge" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Heart rate</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gHrAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gHr" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText"><75</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gHr" value=0></label>
+                    <label for="gHr"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">75-94</span><span class="btnIncrement">+3</span></span><input type="radio" name="gHr" value=3></label>  
+                    <label for="gHr"  data-state="2" class="btn btn-outline-secondary"><span><span class="btnText">>=95</span><span class="btnIncrement">+5</span></span><input type="radio" name="gHr" value=5></label>                            
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Previous DVT or PE</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gDVTAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gDVT" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gDVT" value=0></label>
+                    <label for="gDVT"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+3</span></span><input type="radio" name="gDVT" value=3></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Surgery (under general anesthesia) or lower limb fracture in past month</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gSurgAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gSurg" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gSurg" value=0></label>
+                    <label for="gSurg"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+2</span></span><input type="radio" name="gSurg" value=2></label>              
+                  </div>
+                </td>
+              </tr>        
+
+              <tr>
+                <td>Active malignant condition - Solid or hematologic malignant condition, currently active or considered cured < 1 year</td>
+                <td class='center'>
+                  <div class="gfhirAssist" data-component="gCaAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="gCa" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="gCa" value=0></label>
+                    <label for="gCa"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+2</span></span><input type="radio" name="gCa" value=2></label>              
+                  </div>
+                </td>
+              </tr>
+                       
+              </tbody>
+            </table>  
+          </div>    
+    </td> 
+
+    <td class='parentTd'>
+          <div id="noModGen"><p> <- Complete the Revised Geneva to view PERC.</p></div>
+          <div id="percTableParent" class="na">
+            <table class='percTable fullWidth'>
+              <thead>
+                <tr><th colspan=2>PERC Rule</th><td rowspan=2 id="calculatedScore">&nbsp;</td></tr>
+                <tr><th class='thLabel'>Criteria</th><th class='infoFromEHR'>EHR Information</th></tr>
+              </thead>
+              <tbody>              
+              <tr>
+                <td>Unilateral leg swelling</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="legSwellingAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="legSwelling" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="legSwelling" value=0></label>
+                    <label for="legSwelling" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="legSwelling" value=1></label>              
+                  </div>
+                </td>
+              </tr>  
+
+              <tr>
+                <td>Hemoptysis</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="hemoptysisAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="hemoptysis" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="hemoptysis" value=0></label>
+                    <label for="hemoptysis" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="hemoptysis" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+
+
+              <tr>
+                <td>Age ≥ 50</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="ageAssist">
+                  </div>
+                </td>
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="age" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="age" value=0></label>
+                    <label for="age"  data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="age" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>HR ≥ 100</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="hrAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="hr" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="hr" value=0></label>
+                    <label for="hr" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="hr" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>O2 Sat on room air < 95%</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="satAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="sat" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="sat" value=0></label>
+                    <label for="sat" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="sat" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Prior history of DVT/PE</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="hxPeAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="hxPe" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="hxPe" value=0></label>
+                    <label for="hxPe" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="hxPe" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Recent trauma or surgery</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="traumaAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="trauma" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="trauma" value=0></label>
+                    <label for="trauma" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="trauma" value=1></label>              
+                  </div>
+                </td>
+              </tr>
+
+              <tr>
+                <td>Exogenous estrogen</td>
+                <td class='center'>
+                  <div class="fhirAssist" data-component="estrogensAssist">
+                  </div>
+                </td>          
+                <td class='center'>
+                  <div class="btn-group" data-toggle="buttons">
+                    <label for="estrogens" data-state="0" class="btn btn-outline-secondary"><span><span class="btnText">No</span><span class="btnIncrement">0</span></span><input class="btn btn-outline-secondary" type="radio" name="estrogens" value=0></label>
+                    <label for="estrogens" data-state="1" class="btn btn-outline-secondary"><span><span class="btnText">Yes</span><span class="btnIncrement">+1</span></span><input type="radio" name="estrogens" value=1></label>              
+                  </div>
+                </td>
+              </tr>                        
+
+              </tbody>
+            </table>
+          </div>
+    </td> <!-- end parent td -->
+
+  </tr>
+</table>
+
+
+
+
+    <table id="footer" class="fullWidth">
+      <tr>
+        <td>
+          <span class="disclaimer">A best effort is made to search through the EHR to find matches for different elements of this score.  However, a negative search does not necessarily imply absence of that element.  Please always check with patient.</span>    
+        </td>
+      </tr>      
+    </table>
+
+    <div id="creditsModal" class="modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Credits & Disclaimer<img id="logo" src="mi2.png" alt=""></h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <table class="table">
+              <tr>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/15304025" target="_blank">PERC</td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term=Kline+JA%5BAuthor%5D" target="_blank">Jeffrey Kline, MD</a></td>
+              </tr>
+              <tr>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/16461960" target="_blank">Revised Geneva Score for Pulmonary Embolism</a></td>
+                <td><a href="https://www.ncbi.nlm.nih.gov/pubmed/?term=Le+Gal+G%5BAuthor%5D" target="_blank">Grégoire Le Gal, MD, PhD</a></td>
+              </tr>
+              <tr>
+                <td>Other projects used</td>
+                <td>
+                  <a href="https://github.com/smart-on-fhir/client-js">fhir-client.js</a>
+                  <a href="https://getbootstrap.com/">bootstrap</a>
+                  <a href="https://jquery.com/">jquery</a>
+                  <a href="https://underscorejs.org">underscore.js</a>
+                  <a href="https://momentjs.com/">moment.js</a>
+                  <a href="https://popper.js.org/">popper.js</a>                                                      
+                </td>
+              </tr>
+              <tr>
+                <td>A project of</td>
+                <td><a href="http://mi2.medstarhealth.org/">The MedStar Institute for Innovation</a></td>                
+              </tr>
+              <tr>
+                <td>Contribute at</td>
+                <td><a href="https://github.com/MI2-Labs/peruleout" target="_blank">MI2's Github</a></td>
+              </tr>
+              <tr>
+                <td>License</td>
+                <td><a href="https://github.com/MI2-Labs/peruleout/License" target="_blank">MIT</a></td>
+              </tr>
+              <tr>
+                <td colspan=2>
+                 A best effort is made to search through the EHR to find matches for different elements of this score.  However, a negative search does not necessarily imply absence of that element.  Please always check with patient, their family, and the medical record. 
+                </td>
+              </tr>
+              <tr>
+                <td colspan=2>
+                  This app is intended for educational purposes only.  It cannot diagnose medical conditions or provide treatment recommendations.  This information should not be used for the diagnosis or treatment of any health problem or disease.  This information is not intended to replace clinical judgment or guide individual patient care in any manner.  The system's authors, developers and distributors assume no responsibility for any erroneous results due to defects in the system. Access to and use of the system is provided without warranty of merchantability or fitness for any particular purpose or any other warranty, express or implied.                  
+                </td>
+              </tr>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <div id="debug">
+    
+  </div>
+
+<script>
+
+
+var myApp = {}
+
+myApp.ptMedsByText = []
+
+myApp.allRxNormForOCPs = ["750261","1876810","1605086","1716037","749849","762334","753367","762002","753543","762001","834768","1660690","1252016","1091828","761974","1438778","753482","831872","1422081","761973","1655489","1866047","317541","749848","759742","759743","22656","324044","240707","249357","392634","654353","729534","759741","315772","393524","438862","654351","371717","393525","1154225","1154226","1154227","1154228","1151131","1151133","317541","749848","759743","759742","22656","4124","324044","240707","249357","654353","729534","759741","315772","315897","317366","438862","439439","654351","371717","1154225","1154226","1151131","1151133","4124","6529","812260","317541","25734","4124","608868","246640","250893","315897","317366","334873","372312","1156850","1157347","1151131","1151133","317541","978949","22968","4083","994203","24395","978944","978946","438962","978942","978945","978943","1158329","1158330","1151131","1151133","317541","748800","748798","11636","4124","840781","284207","597526","602598","630734","1301016","315897","317366","334705","343266","597525","602597","315898","1301015","378853","1160652","1161259","1151131","1151133","1099269","1099026","1813112","1543553","1050494","801185","993804","1011081","748856","1013630","1233850","748857","1483554","1483551","317541","1050493","748798","1013629","748800","1483553","1483550","11636","1013625","608838","840781","1013626","1050492","284207","630734","597526","602598","1483552","1483549","1301016","343266","597525","602597","1301015","1013624","378853","1483548","1483546","1483547","1861726","1861727","1160652","1161259","1151131","1151133","317541","749571","749761","748878","751901","1373503","749568","810096","748868","748832","748866","751553","4124","6373","214558","238019","242297","246521","250506","310230","348804","348805","722152","1373501","1373502","315897","316147","316148","316149","317366","317367","317404","334708","349697","349698","439439","722151","372590","1157348","1157349","1151131","1151133","353502","1536581","316987","326374","4124","352377","1534811","1536586","1534810","1536582","1806239","1806243","1534809","358820","1534808","1806237","1157362","1295056","1536584","1536585","1184524","1296792","1151122","1294723","317541","749784","749860","749157","31994","4124","214559","240128","406396","578732","687424","749155","749156","316390","317633","439439","452711","687423","373121","1157363","1157364","1151131","1151133","6529","812260","1111008","194722","710529","11109","657710","14584","352376","1111011","646250","1367439","1111009","646248","1367437","1111010","646249","1367438","389221","1367436","393400","798355","393401","1367435","1157927","1367433","1367434","1172000","1179384","1179385","1182873","1151125","1151136","7519","1007474","203000","316969","317541","6703","29451","860227","885111","860226","885110","366114","577154","860215","860221","860225","860231","577152","860214","860220","860224","860230","372747","372748","1159210","1159211","1159212","1183807","1183808","1151131","1151133","1151137","202886","202888","545467","1000499","1000500","1000487","1000497","1000491","316950","317541","721656","1649574","1000395","1000398","1000486","1000490","1000496","6691","1006917","1007015","1008552","636632","1000112","1000124","1000128","1000133","1000139","1000145","1000154","1000158","1000123","1000127","1000132","1000138","1000144","1000157","365613","791057","791063","93902","1738613","1000114","1000354","1000126","1000153","1000131","1000355","1000135","1000353","1000141","1000356","1000149","1000374","1000156","1000161","1000352","1000351","1000364","1000376","1000378","1000380","1000384","1000386","1000113","1000125","1000130","1000134","1000140","1000148","1000155","1000160","1000350","1000363","1000375","1000377","1000379","1000383","1000385","372080","372739","378626","378653","378788","393365","727610","1738611","1159192","1159194","1159195","1165168","1165169","1165170","1165776","1165777","1165781","1165782","1173112","1182477","1182478","1186698","1151126","1151131","1151133","1005925","317541","1005921","1005920","1005928","1005926","1005927","1005924","1546350","1005922","1546349","1005923","1163979","1163980","1174612","1174613","1151131","1151133","1090993","1116549","403732","1736649","317541","91058","316965","1037184","749736","751876","749854","749856","749852","749879","749874","823777","749869","749858","753476","1095224","1359117","1358763","1359132","1358776","1359023","1359028","1421461","1426600","1251336","1607990","1484902","1251334","4124","7514","384410","31983","1090996","1722245","1736654","1736656","1251325","1251327","1090994","1722244","1736650","1736655","1251324","1251326","1090995","1116551","751211","1736651","1037183","1048440","1090992","1099638","238015","310463","312033","312124","392662","433718","1358762","1359022","1359130","1359131","1421459","1426288","1435163","1437769","1251323","1037182","1099637","315898","316386","317367","317443","317633","317656","331489","334704","393545","439439","315897","317366","1359021","597273","1251322","372105","446877","1421458","1157354","1157355","1295455","1167867","1167868","1736652","1736653","1167864","1167865","1176635","1176636","1151131","1151133","1294716","1090993","1116549","215496","216161","403732","1495086","1736649","1488617","1488619","1251337","1037185","1099897","1650201","1727521","1539955","977836","1422896","1539953","748974","831533","748987","748962","748977","757594","1811763","1495092","1430383","749855","1427300","750267","749881","749148","1047040","762004","1427301","1300538","1047041","753477","751870","1856424","749882","750264","1242786","762007","1235867","749859","1856402","751879","749853","749151","751871","762005","1242787","1300911","751868","749880","753396","751875","1856398","1244908","1094543","1869047","753536","1235874","1485332","1486452","1367691","1483558","1095362","749737","1095225","1873704","1721965","1359134","1358777","1440183","1359133","1486801","1550536","1359135","1358764","1809905","1652084","1487086","1605091","1724801","1595453","1359118","1359020","1426601","1358775","1358781","1484903","1358780","1722680","1358765","1358770","1359032","1359029","1359027","1537209","1359030","1729516","1359026","1359024","1359031","1440937","1359025","1539190","1806683","1359125","1550964","1550965","1359128","1251335","1806684","1359129","316949","316965","316987","317541","91058","1358776","1359132","1421461","1359117","1426600","1037184","1358763","748961","749856","749874","753476","749871","749852","749862","749869","749854","749858","823777","749879","751876","749736","1095224","1359028","1359023","1359124","1359127","1488616","1488618","1484902","1251336","1607990","1251334","7514","1007941","154643","214551","384410","466546","31983","31984","1090996","1722245","1000407","1251495","1251501","1251325","1251327","1495091","1736654","1736656","1090994","1722244","1000406","1251494","1251500","1251324","1251326","1495087","1736650","1736655","1090995","1116551","369127","751211","1495088","1806054","1736651","1000405","1037183","1048440","1090992","1099638","198042","198043","238015","249869","250838","312033","312124","310463","392662","578864","433718","578871","1359130","1359294","1359131","1358762","1359022","1359123","1359235","1359291","1359126","1421459","1426288","1437769","1435163","1251323","1251493","1251499","1000404","1037182","1099637","316385","316386","317443","317656","329745","334693","393545","1359021","1359122","1359234","1359290","1251322","1251492","1251498","372073","372105","373113","373114","373116","446877","578863","1421458","1806052","1156846","1156847","1157354","1157355","1159848","1159849","1159850","1161004","1161005","1165172","1165173","1165174","1295455","1295555","1736652","1736653","1495089","1495090","1167867","1167864","1167868","1167865","1166882","1176635","1176636","1176310","1176311","1296912","1151122","1151126","1151131","1151133","1294716","1294723","152061","402099","858076","1366335","1426876","1490058","1543730","1545298","1549086","1598653","1600597","1605253","1657612","1736009","1788859","1855514","1856533","1303925","748867","761977","1095227","1241901","748865","762332","749565","1812279","1020155","751890","1603861","1356074","749573","1876397","749762","753532","748886","1364848","748879","762663","759469","1661092","1245919","1006065","1918056","1423123","751902","1149667","1874537","1373504","1805273","1112687","750268","1720616","748869","749569","753485","1860414","1244632","751884","810097","1538130","1428933","1235267","753544","1795598","1440185","751885","1304988","854861","763089","751554","1112715","316987","317541","657710","1856271","748832","748866","1373503","749571","748878","751901","749761","748868","749568","810096","763088","751553","6373","1008359","1008692","1008976","214558","687333","807283","402252","858079","1366339","1426881","1490063","1543735","1545303","1549091","1598658","1600602","1605257","1657617","1736014","1788864","1855519","1856546","1303930","807282","486156","858077","1366336","1426877","1490059","1543731","1545299","1549087","1598654","1600598","1605254","1657613","1736010","1788860","1855515","1856545","1303926","858078","1426878","1490060","1543732","1545300","1549088","1598655","1600599","1657614","1856528","1806040","1856517","1856524","1736011","1788861","1855516","1856535","1303927","105510","105512","238019","242297","246521","250506","259218","310230","348805","348804","402250","483325","608565","722152","804156","1373502","1373501","1366334","1366343","1605252","1811886","316147","316148","316149","317404","332444","335141","349697","349698","360543","402376","483324","608564","722151","804155","1366333","1366342","1605251","1811885","372590","372591","378923","1806038","1856515","1157348","1157349","1163476","1163477","1163478","1165167","1295146","1366338","1426879","1490061","1426880","1490062","1605256","1788862","1598656","1545301","1657615","1543733","1600600","1736012","1549089","1545302","1657616","1788863","1598657","1543734","1549090","1736013","1600601","1856536","1855517","1855518","1172337","1181044","1181264","1181265","1303928","1303929","1296681","1151122","1151131","1151133","1151136","1294723"];
+
+var dfdGotPt = $.Deferred();
+var dfdGotEncounter = $.Deferred();
+var dfdGotMeds = $.Deferred();
+var dfdGotMedOrder = $.Deferred();
+var dfdGotHr = $.Deferred();
+var dfdGotSp02 = $.Deferred();
+var dfdGotConditions = $.Deferred();
+
+
+$(document).ready(function(){ getFHIR(); })
+$.when(dfdGotPt).then(function(){ getEncounter(); requestsThatDontNeedEncounter() })
+$.when(dfdGotEncounter).then(function(){ requestsThatNeedEncounter() })
+$.when(dfdGotPt).then(function(){ calculatePERC();  })
+$.when(dfdGotConditions).then(function(){ calculatePERC();  })
+$.when(dfdGotMeds, dfdGotMedOrder).then(function(){ calculatePERC();  })
+$.when(dfdGotHr).then(function(){ calculatePERC();  })
+$.when(dfdGotSp02).then(function(){ calculatePERC();  })
+$.when(dfdGotConditions,dfdGotPt,dfdGotMeds,dfdGotHr,dfdGotSp02).then(function(){ calculatePERC(); $("#progress").html("") })
+
+
+
+function getFHIR(){
+    FHIR.oauth2.ready(function (fhirClient) {
+        myApp.smart = fhirClient;
+
+//for smart healthit sandbox that does not give encounter
+
+        if (!myApp.smart.tokenResponse.encounter){
+          if (myApp.smart.tokenResponse.patient === "smart-629528"){ myApp.smart.tokenResponse.encounter = "smart-Encounter-39" }
+          if (myApp.smart.tokenResponse.patient === "1c5c2401-dfb2-4385-8fc2-f59af0970130"){ myApp.smart.tokenResponse.encounter = "f1aa4764-66a9-4d08-92cd-1708c7b1f518" }
+          if (myApp.smart.tokenResponse.patient === "smart-665677"){ myApp.smart.tokenResponse.encounter = "smart-Encounter-827" }
+          if (myApp.smart.tokenResponse.patient === "smart-2347217"){ myApp.smart.tokenResponse.encounter = "smart-Encounter-374" }
+          if (myApp.smart.tokenResponse.patient === "smart-621799"){ myApp.smart.tokenResponse.encounter = "smart-Encounter-855" }
+
+        }
+
+
+//
+        myApp.patient = fhirClient.patient;
+        $.when( myApp.patient.read() )
+                .done(function (data) {
+                  myApp.patientResource = data
+                  dfdGotPt.resolve()
+                  $("#progress").html("Checked Patient")
+        }, function(error){ 
+//          alert(JSON.stringify(error))
+        })
+      })
+}
+
+function getEncounter(){
+
+
+        $.when(myApp.patient.api.fetchAll({
+            type: "Encounter"
+        })
+        .done(function (data) {
+                  myApp.encounter = _.find(data, function(val,index){ if(val.id === myApp.smart.tokenResponse.encounter){ return val } })
+                  myApp.startPeriod = myApp.encounter.period.start
+                  dfdGotEncounter.resolve()          
+                  $("#progress").html("Checked Encounters")
+        }), function(error){ 
+        //  alert(JSON.stringify(error)) 
+        });
+
+}
+
+function requestsThatDontNeedEncounter(){
+
+        $.when(myApp.patient.api.fetchAll({
+            type: "MedicationStatement",
+            query: {
+                status: "active"
+              }           
+        }).done(function (data) {
+                  myApp.meds = data
+                  _.each(myApp.meds, function(val,index){
+                    if (val.medicationCodeableConcept){
+                      if (val.medicationCodeableConcept.text){
+                        myApp.ptMedsByText.push(val.medicationCodeableConcept.text)                        
+                      }
+                    }
+                  })
+                  dfdGotMeds.resolve()  
+                  $("#progress").html("Checked Meds")               
+        }), function(error){ alert(JSON.stringify(error)) });
+
+
+        $.when(myApp.patient.api.fetchAll({
+            type: "MedicationOrder",
+            query: {
+                status: "active"
+              }           
+        }).done(function (data) {
+                  myApp.medOrder = data
+                  _.each(myApp.medOrder, function(val,index){
+                    if (val.medicationCodeableConcept){
+                      if (val.medicationCodeableConcept.text){
+                        myApp.ptMedsByText.push(val.medicationCodeableConcept.text)                        
+                      }
+                    }
+                  })
+
+                  dfdGotMedOrder.resolve()  
+                  $("#progress").html("Checked Meds")               
+        }), function(error){ alert(JSON.stringify(error)) });
+
+
+        $.when(myApp.patient.api.fetchAll({
+            type: "Condition"
+//            query: {category:"diagnosis"}      
+        })
+        .done(function (data) {
+                  myApp.conditions = data
+                  myApp.conditionsTextArray = []
+                  _.each(myApp.conditions, function(val,index){
+                    if (val.code && val.code.text){
+                      myApp.conditionsTextArray.push(val.code.text)                      
+                    }
+                  })
+                  dfdGotConditions.resolve()   
+                  $("#progress").html("Checked Conditions")       
+
+        }), function(error){ alert(JSON.stringify(error)) });
+
+}
+
+function requestsThatNeedEncounter(){
+
+
+
+
+        $.when(myApp.patient.api.fetchAll({
+          type: "Observation",
+          query: {
+                          code: 'http://loinc.org|8890-6,http://loinc.org|8867-4',
+                          date: {$gte: myApp.startPeriod},
+                          status: "final"
+                        }
+        }).done(function (data) {
+              myApp.hr = data
+              myApp.hr = _.filter(myApp.hr, function(val,index){
+                if (val.valueQuantity && isNaN(val.valueQuantity.value) === false){
+                  return val
+                }
+              })              
+              dfdGotHr.resolve()
+              $("#progress").html("Checked Heart Rates")
+        }), function(error){ alert(JSON.stringify(error)) });
+//vital signs observed = 8716-3
+        $.when(myApp.patient.api.fetchAll({
+          type: "Observation",
+          query: {
+                    code: 'http://loinc.org|59408-5,http://loinc.org|20564-1,http://loinc.org|2710-2',
+                    date: {$gte: myApp.startPeriod},
+                    status: "final"                    
+                  }
+        }).done(function (data) {
+              myApp.sp02 = data
+              myApp.sp02 = _.filter(myApp.sp02, function(val,index){
+                if (val.valueQuantity && isNaN(val.valueQuantity.value) === false){
+                  return val
+                }
+              })
+              dfdGotSp02.resolve()
+              $("#progress").html("Checked Sp02")
+        }), function(error){ alert(JSON.stringify(error)) });
+
+}
+
+
+
+
+/////////
+//calulate stuff
+/////////
+      function calculatePERC() {
+
+
+//age
+        var age = moment().diff( moment(myApp.patientResource.birthDate, "YYYY-MM-DD"), "year")
+          if (age < 50){
+            $('label[for=age][data-state=0]').trigger('click');
+            $('label[for=age]').addClass('btn-primary');            
+            $('div[data-component=ageAssist]').html("Age: "+age)
+          }else if (age >= 50){
+            $('label[for=age][data-state=1]').trigger('click');          
+            $('label[for=age]').addClass('btn-primary');            
+            $('div[data-component=ageAssist]').html("Age: "+age)
+          }else{
+            alert("bad age")
+          }
+
+          if (age < 66){
+            $('label[for=gAge][data-state=0]').trigger('click');
+            $('label[for=gAge]').addClass('btn-primary');            
+            $('div[data-component=gAgeAssist]').html("Age: "+age)
+          }else if (age >= 66){
+            $('label[for=gAge][data-state=1]').trigger('click');          
+            $('label[for=gAge]').addClass('btn-primary');            
+            $('div[data-component=gAgeAssist]').html("Age: "+age)
+          }else{
+            alert("bad age")
+          }
+
+//ocps
+        var ocps = []
+        _.each(myApp.ptMedsByText, function(val,index){ 
+            res = val.match(/ethinyl|estradiol|estrogen/gi);
+            if (res){ ocps.push( val ) }
+        })
+
+        var allMeds = _.union(myApp.meds, myApp.medOrder)
+        _.each(allMeds, function(val,index){
+          if (val.medicationCodeableConcept){
+            _.each(val.medicationCodeableConcept.coding, function(v,i){
+              if (_.indexOf(myApp.allRxNormForOCPs,v.code) > -1){ ocps.push(v.display) }
+            })  
+          }
+        })
+
+
+          ocps = _.uniq(ocps)
+
+          if (ocps.length === 0){
+            $('label[for=estrogens][data-state=0]').trigger('click');
+            $('label[for=estrogens]').addClass('btn-primary');                        
+            $('div[data-component=estrogensAssist]').html("No estrogens found in med list")
+          }else if (ocps.length > 0){
+            $('label[for=estrogens][data-state=1]').trigger('click');          
+            $('label[for=estrogens]').addClass('btn-primary');            
+            $('div[data-component=estrogensAssist]').html("Meds: "+ocps.join(", "))
+          }else{
+            alert("bad ocps")
+          }
+//hr
+
+        var hrsGreaterThan100 = []
+        var allHrs = []
+        _.each(myApp.hr, function(val,index){ 
+          if (val && val.valueQuantity.value > 99)
+             { 
+              hrsGreaterThan100.push( val.valueQuantity.value )
+             } 
+            else
+            { allHrs.push(val.valueQuantity.value) }
+        })
+
+        hrsGreaterThan100 = _.sortBy(hrsGreaterThan100)
+        allHrs = _.sortBy(allHrs)
+
+          if (hrsGreaterThan100.length === 0 && myApp.hr.length !== 0) {
+            $('label[for=hr][data-state=0]').trigger('click');
+            $('label[for=hr]').addClass('btn-primary');                        
+            $('div[data-component=hrAssist]').html("No heart rates > 99 found<br/><span class='oldValues'>("+allHrs.join(", ")+")</span>")
+          }else if (hrsGreaterThan100.length > 0){
+            $('label[for=hr][data-state=1]').trigger('click');          
+            $('label[for=hr]').addClass('btn-primary');                        
+            $('div[data-component=hrAssist]').html("HRs: "+hrsGreaterThan100.join(", "))
+          }else{
+//            alert("bad hr")
+          }
+
+        var hrsLessThan75 = []
+        var hrsBt75and94 = []
+        var hrsGreaterThan94 = []                
+
+        _.each(myApp.hr, function(val,index){ 
+          if (val && val.valueQuantity.value >= 95)
+            {  hrsGreaterThan94.push( val.valueQuantity.value ) } 
+          else if (val && val.valueQuantity.value >= 75 && val.valueQuantity.value <= 94)
+            {  hrsBt75and94.push( val.valueQuantity.value ) }
+          else
+            { hrsLessThan75.push(val.valueQuantity.value) }
+        })
+
+        hrsLessThan75 = _.sortBy(hrsLessThan75)
+        hrsBt75and94 = _.sortBy(hrsBt75and94)
+        hrsGreaterThan94 = _.sortBy(hrsGreaterThan94)
+
+
+          if (hrsGreaterThan94.length > 0){
+            $('label[for=gHr][data-state=2]').trigger('click');
+            $('label[for=gHr]').addClass('btn-primary');                                    
+            $('div[data-component=gHrAssist]').html("HR: "+hrsGreaterThan94.join(", "))
+          }else if (hrsBt75and94.length > 0){
+            $('label[for=gHr][data-state=1]').trigger('click'); 
+            $('label[for=gHr]').addClass('btn-primary');                                             
+            $('div[data-component=gHrAssist]').html("HR: "+hrsBt75and94.join(", "))
+          }else if (hrsLessThan75 && myApp.hr.length !== 0){
+            $('label[for=gHr][data-state=0]').trigger('click');
+            $('label[for=gHr]').addClass('btn-primary');                                    
+            $('div[data-component=gHrAssist]').html("No heart rates > 74 found<br/><span class='oldValues'>("+allHrs.join(", ")+")</span>")
+          }else{
+//            alert("bad ghr")
+          }
+
+
+
+//sp02
+
+        var sp02LessThan95 = []
+        var allSp02 = []
+
+        _.each(myApp.sp02, function(val,index){ 
+//          alert(JSON.stringify(val))
+          if (val && val.valueQuantity.value < 95)
+            { 
+              sp02LessThan95.push( val.valueQuantity.value )
+              allSp02.push(val.valueQuantity.value)
+             } 
+            else
+            { allSp02.push(val.valueQuantity.value) }
+        })
+
+        allSp02 = _.sortBy(allSp02)
+        sp02LessThan95 = _.sortBy(sp02LessThan95)
+
+          if (sp02LessThan95.length === 0 && myApp.sp02.length !== 0){
+            $('label[for=sat][data-state=0]').trigger('click');
+            $('label[for=sat]').addClass('btn-primary');
+            $('div[data-component=satAssist]').html("No Sats < 95 found<br/><span class='oldValues'>("+allSp02.join(", ")+")</span>")
+          }else if (sp02LessThan95.length > 0){
+            $('label[for=sat][data-state=1]').trigger('click');       
+            $('label[for=sat]').addClass('btn-primary');               
+            $('div[data-component=satAssist]').html("Pulse Ox: "+sp02LessThan95.join(", "))
+          }else{
+//            alert("bad sp02")
+          }
+//hx dvt/pe
+
+
+        var priorDvtPe = []
+          _.each(myApp.conditionsTextArray,function(val2,index2){
+            var res = [] 
+            if (val2){
+              res = val2.match(/pulmonary embolism|deep venous thrombosis|DVT/gi);
+            }  
+            if (res){ priorDvtPe.push( val2 ) }
+          })
+          priorDvtPe = _.uniq(priorDvtPe)
+          if (priorDvtPe.length === 0){
+            $('label[for=hxPe][data-state=0]').trigger('click');
+            $('label[for=hxPe]').addClass('btn-primary');            
+            $('div[data-component=hxPeAssist]').html("No prior hx of DVT/PE found")
+            $('label[for=gDVT][data-state=0]').trigger('click');
+            $('label[for=gDVT]').addClass('btn-primary');            
+            $('div[data-component=gDVTAssist]').html("No prior hx of DVT/PE found")
+          }else if (priorDvtPe.length > 0){
+            $('label[for=hxPe][data-state=1]').trigger('click');  
+            $('label[for=hxPe]').addClass('btn-primary');                    
+            $('div[data-component=hxPeAssist]').html("Hx of: "+priorDvtPe.join(", "))
+            $('label[for=gDVT][data-state=1]').trigger('click');
+            $('label[for=gDVT]').addClass('btn-primary');            
+            $('div[data-component=gDVTAssist]').html("Hx of: "+priorDvtPe.join(", "))
+          }else{
+//            alert("bad pe/dvt")
+          }
+
+//Surgery (under general anesthesia) or lower limb fracture in past month
+
+        var surgOrFx = []
+        var currentDate = moment()
+        var recentConditions = _.filter(myApp.conditions, function(val,index){ 
+          var dxOnsetMoment = moment(val.onsetDateTime,"YYYY-MM-DD")
+          if (currentDate.diff(dxOnsetMoment, 'days') < 29){ 
+            res = val.code.text.match(/fracture|ectomy/gi);
+            if (res){ 
+              return val 
+            }
+          }
+        })
+        _.each(recentConditions, function(val,index){
+          surgOrFx.push(val.code.text+": "+val.onsetDateTime)
+        })
+
+          surgOrFx = _.uniq(surgOrFx)
+          if (surgOrFx.length === 0){
+            $('label[for=gSurg][data-state=0]').trigger('click');
+            $('label[for=gSurg]').addClass('btn-primary');            
+            $('div[data-component=gSurgAssist]').html("No prior hx of surgery / limb fx found in last 4 weeks")
+          }else if (surgOrFx.length > 0){
+            $('label[for=gSurg][data-state=1]').trigger('click');  
+            $('label[for=gSurg]').addClass('btn-primary');                                
+            $('div[data-component=gSurgAssist]').html(surgOrFx.join(", "))
+          }else{
+            alert("bad gSurg")
+          }      
+
+
+
+//Active malignant condition - Solid or hematologic malignant condition, currently active or considered cured < 1 year  
+
+        var activeMalig = []
+        var currentDate = moment()
+        var recentConditions = _.filter(myApp.conditions, function(val,index){ 
+          var dxOnsetMoment = moment(val.onsetDateTime,"YYYY-MM-DD")
+          if (currentDate.diff(dxOnsetMoment, 'days') < 365){ 
+            res = val.code.text.match(/cinoma|chemother|malignant neoplasm|malignancy/gi);
+              if (!val.code.text.match(/history of/gi)){
+                if (res){ return val }              
+              }
+          }
+        })
+
+        var activeMalignancy = _.filter(myApp.conditions, function(val,index){ 
+          if (val.clinicalStatus === "active"){ 
+            res = val.code.text.match(/cinoma|chemother|malignant neoplasm|malignancy/gi);
+              if (!val.code.text.match(/history of/gi)){
+                if (res){ return val }              
+              }
+          }
+        })
+
+        _.each(recentConditions, function(val,index){
+          activeMalig.push(val.code.text+": "+moment(val.onsetDateTime).fromNow())
+        })
+
+        _.each(activeMalignancy, function(val,index){
+          activeMalig.push(val.code.text+": <span style='color:red;'>active</span>")
+        })
+
+          activeMalig = _.uniq(activeMalig)
+          if (activeMalig.length === 0){
+            $('label[for=gCa][data-state=0]').trigger('click');
+            $('label[for=gCa]').addClass('btn-primary');                                            
+            $('div[data-component=gCaAssist]').html("No prior hx of cancer / chemo found in last year")
+          }else if (activeMalig.length > 0){
+            $('label[for=gCa][data-state=1]').trigger('click');   
+            $('label[for=gCa]').addClass('btn-primary');                                                   
+            $('div[data-component=gCaAssist]').html("<span class='oldValues'>"+activeMalig.join("<br/>")+"</span>")
+          }else{
+//            alert("bad gCa")
+          }      
+
+
+
+//recent surg or trauma
+
+        var surgOrTrauma = []
+        var currentDate = moment()
+        var recentConditions = _.filter(myApp.conditions, function(val,index){ 
+          var dxOnsetMoment = moment(val.onsetDateTime,"YYYY-MM-DD")
+          if (currentDate.diff(dxOnsetMoment, 'days') < 29){ 
+            res = val.code.text.match(/fracture|trauma|injury|laceration|contusion/gi);
+            if (res){ 
+              return val 
+            }
+          }
+        })
+        _.each(recentConditions, function(val,index){
+          surgOrTrauma.push(val.code.text+": "+val.onsetDateTime)
+        })
+
+          surgOrTrauma = _.uniq(surgOrTrauma)
+          if (surgOrTrauma.length === 0){
+            $('label[for=trauma][data-state=0]').trigger('click');
+            $('label[for=trauma]').addClass('btn-primary');
+            $('div[data-component=traumaAssist]').html("No prior hx of trauma/surgery found in last 4 weeks")
+          }else if (surgOrTrauma.length > 0){
+            $('label[for=trauma][data-state=1]').trigger('click'); 
+            $('label[for=trauma]').addClass('btn-primary');                     
+            $('div[data-component=traumaAssist]').html(surgOrTrauma.join(", "))
+          }else{
+//            alert("bad pe/dvt")
+          }      
+
+
+          calculatedScore()
+      };
+
+      $("body").on("change", ".percTable input", function(){ calculatedScore() })
+
+///hemopyt is doubled
+
+      $("body").on("change", "input[name='gHemoptysis'], input[name='hemoptysis']", function(){
+         var name = $(this).attr("name")
+         var dataState = $("label[for='"+name+"'].active").attr('data-state');
+         if (name === "hemoptysis"){
+          $("label[for='gHemoptysis'][data-state="+dataState+"]").trigger('click');        
+         }
+         if (name === "gHemoptysis"){
+          $("label[for='hemoptysis'][data-state="+dataState+"]").trigger('click');        
+         }
+      })
+
+//this is because hemoptysis is in both tools and is annoying to do twice
+
+      function syncHemoptysis(){
+        var dataState = $("label[for='gHemoptysis'].active").attr('data-state');
+        $("label[for='hemoptysis'][data-state="+dataState+"]").trigger('click');        
+      }
+
+
+      function calculatedScore(){
+        var score = 0
+        var $inputs = $(".percTable input:checked")
+        //only checked
+        _.each($inputs, function(val,index){
+          score = score + parseInt( $(val).val() )
+        })
+
+        var $allInputs = $(".percTable input")
+        var allInputsLength = $allInputs.length/2
+        var checkedInputsLength = $inputs.length
+        var addPhrase = ""
+        if (checkedInputsLength !== allInputsLength){
+          addPhrase = "<span class='incomplete'>("+(allInputsLength-checkedInputsLength)+" incomplete)</span>"
+        }
+        var recs = ""
+        if (score > 0){ recs = "<br/><span>Send D-Dimer</span>" }
+
+        $("#calculatedScore").html("<span>Score: "+score+"</span>"+addPhrase+recs)
+      }
+
+
+
+///////geneva
+
+      $("body").on("change", ".gTable input", function(){ gCalculatedScore() })
+
+      function gCalculatedScore(){
+        var score = 0
+        var $inputs = $(".gTable input:checked")
+        //only checked
+        _.each($inputs, function(val,index){
+          score = score + parseInt( $(val).val() )
+        })
+
+        var $allInputs = $(".gTable input")
+        var allInputsLength = ($allInputs.length-1)/2
+        var checkedInputsLength = $inputs.length
+        var addPhrase = ""
+        if (checkedInputsLength !== allInputsLength){
+          addPhrase = "<span class='incomplete'>("+(allInputsLength-checkedInputsLength)+" incomplete)</span>"
+        }
+        var recs = ""
+        if (score > 3 && score <= 10){ 
+          recs = "<br/><span>Not Low Risk - Send D-Dimer - Can't PERC</span>"  
+          $("#percTableParent").addClass("na")
+          $("#noModGen").html("Can't PERC, not low risk").addClass("warning")
+        }
+        else if (score < 4 && checkedInputsLength === allInputsLength){ 
+          recs = "<br/><span>Low Risk - Continue to PERC</span>" 
+          $("#noModGen").remove()
+          $("#percTableParent").removeClass("na")
+          syncHemoptysis()
+        }
+        else if (score >= 11 ){ 
+          recs = "<br/><span>High Risk - Order CT or VQ</span>" 
+          $("#noModGen").html("Can't PERC, not low risk").addClass("warning")
+        }
+        else{
+          $("#noModGen").html("<p> <- Complete the Revised Geneva to view PERC.</p>").removeClass("warning")
+        }
+
+        $("#gCalculatedScore").html("<span>Score: "+score+"</span>"+addPhrase+recs)
+      }
+
+////////for v1 we decided not to do a save function, this is the plumbing for it
+////////save
+/*
+      $("body").on("click", "#save", function(){ assembleDoc() })
+
+      function assembleDoc(){
+        toInsert = ""
+
+///mod geneva
+        toInsert += "<!DOCTYPE html><html><head><title>Revised Geneva and PERC</title></head><body>"
+        toInsert += "<table><tbody><tr><th colspan='3'>Revised Geneva</th></tr><tr><th>Question</th><th>EHR Info</th><th>Answer</th></tr>"
+        $actives = $(".gTable label.active:visible")
+        _.each($actives, function(val,index){
+          var chosenOptionText = $(val).find("span.btnText").text()
+          var question = $(val).closest("tr").find("td:nth-child(1)").text()
+          var assists = $(val).closest("tr").find("td:nth-child(2)").text()          
+          toInsert += "<tr><td>"+escapeHtml(question)+"</td><td>"+escapeHtml(assists)+"</td><td>"+chosenOptionText+"</td></tr>"
+        })
+
+        var score = $("#gCalculatedScore").html()
+        toInsert += "<tr><td colspan='3'>"+score+"</td></tr>"
+//perc
+        toInsert += "<tr><th colspan='3'>PERC Rule</th></tr><tr><th>Question</th><th>EHR Info</th><th>Answer</th></tr>"
+
+        $actives = $(".percTable label.active:visible")
+        _.each($actives, function(val,index){
+          var chosenOptionText = $(val).find("span.btnText").text()
+          var question = $(val).closest("tr").find("td:nth-child(1)").text()
+          var assists = $(val).closest("tr").find("td:nth-child(2)").text()          
+          toInsert += "<tr><td>"+escapeHtml(question)+"</td><td>"+escapeHtml(assists)+"</td><td>"+chosenOptionText+"</td></tr>"
+        })
+
+        var score = $("#gCalculatedScore").html()
+        toInsert += "<tr><td colspan='3'>"+score+"</td></tr>"
+
+        toInsert += "</tbody></table></body></html>"
+        toInsert = toInsert.replace(/\n|\r/gi," ")
+        toInsert = toInsert.replace(/'/gi,'"')     
+        toInsert = toInsert.replace(/<br>/gi,'<br/>')                
+//console.log(toInsert)
+        var coding = [{"system": "http://loinc.org","code": "68608-9"}]
+
+        postDocument(toInsert, coding)
+      }
+
+
+      function postDocument(incoming, incomingCoding){
+
+        if (!myApp.encounter || myApp.encounter.length === 0 ){ alert("no enctouners"); return false; }
+
+        $.ajax({
+          url: myApp.smart.server.serviceUrl+"/DocumentReference",
+          type: "POST",
+          data: JSON.stringify({
+            subject:{"reference": "Patient/"+myApp.patientResource.id}, 
+            resourceType: "DocumentReference",
+            content:[{
+              attachment:{
+                contentType: "application/xhtml+xml;charset=utf-8",
+                data: btoa(incoming) } 
+                }], 
+            type:{
+                coding: incomingCoding
+                }, 
+            context: { 
+                "encounter": { "reference": "Encounter/"+myApp.encounter[(myApp.encounter.length-1)].id }
+                }, 
+      //      author:[{ "reference": "Practitioner/"+myApp.smart.user.userId }], 
+            indexed: moment().format(),  //"2015-11-18T18:00:00Z" //ISO 8601 format
+            status: "current", 
+            docStatus: { 
+                  "coding": [ { "system": "http://hl7.org/fhir/composition-status", "code": "final" } ]
+              } 
+          }),
+          crossDomain: true,
+          beforeSend: function(xhr){
+//            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('Content-Type', 'application/json+fhir'); 
+            xhr.setRequestHeader('Authorization', 'Bearer '+myApp.smart.server.auth.token)     
+          },
+          success:function(data){console.log("success: "+JSON.stringify(data))},
+          complete:function(jqXHR, xhr){console.log("complete: "+jqXHR.getAllResponseHeaders())},
+          error:function(data, status, xhr){console.log("error: "+JSON.stringify(data))},    
+        })
+
+
+
+      }
+*/
+// utils
+      var entityMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;',
+        '/': '&#x2F;',
+        '`': '&#x60;',
+        '=': '&#x3D;'
+      };
+
+      function escapeHtml (string) {
+        return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+          return entityMap[s];
+        });
+      }
+
+
+
+    </script>
+
+
+
+  </body>
+</html>
